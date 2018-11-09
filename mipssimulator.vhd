@@ -593,6 +593,43 @@ PORT MAP(CLK => CLK,
 		ex_write_reg_sel =>  ex_write_reg_sel,
 		mem_write_reg_sel => mem_write_reg_sel);
 
+
+
+b2v_mem_wb : mem_wb
+PORT MAP(CLK  => CLK          
+		wb_flush => wb_flush,
+		wb_stall => wb_stall,
+		memwb_reset => memwb_reset,
+		mem_instruction => mem_instruction,  -- pass instruction along (useful for debugging)
+        wb_instruction  => wb_instruction,
+        mem_pc_plus_4  => mem_pc_plus_4,
+       	wb_pc_plus_4  => wb_pc_plus_4,
+
+  	-- CONTROL signals
+        mem_reg_dest  => mem=reg_dest, 
+  	    mem_mem_to_reg => mem_mem_to_reg, 
+  	    mem_reg_write  => mem_mem_write,
+  	    wb_reg_dest   => wb_reg_dest,
+  	    wb_mem_to_reg => wb_mem_to_reg,
+  	    wb_reg_write  => wb_reg_write,
+  	-- END CONTROL signals
+
+  	-- ALU signals
+		mem_ALU_out => mem_ALU_out, 
+		wb_ALU_out => wb_ALU_out,
+  	-- END ALU signals
+
+  	-- Memory signals
+		mem_dmem_out => mem_dmem_out,
+		wb_dmem_out => wb_dmem_out,
+  	-- END Memory signals
+
+	-- Register signals
+  		mem_write_reg_sel => mem_write_reg_sel,
+  		wb_write_reg_sel => wb_write_reg_sel, 
+  	-- END Register signals
+  	    );
+		
 alu_shamt <= "00000";
 dmem_byteena <= "1111";
 imem_byteena <= "1111";
