@@ -25,9 +25,9 @@ ENTITY mipssimulator IS
 	PORT
 	(
 		CLK :  IN  STD_LOGIC;
-		PC_RESET :  IN  STD_LOGIC;
-		REG_RESET :  IN  STD_LOGIC;
-		SET_TO_4 :  IN  STD_LOGIC_VECTOR(31 DOWNTO 0)
+		RESET :  IN  STD_LOGIC
+--		RESET :  IN  STD_LOGIC;
+--		SET_TO_4 :  IN  STD_LOGIC_VECTOR(31 DOWNTO 0)
 	);
 END mipssimulator;
 
@@ -228,9 +228,10 @@ COMPONENT ex_mem
 	-- Register signals
 		ex_rt_data : in std_logic_vector(31 downto 0);
 		mem_rt_data : std_logic_vector(31 downto 0);
-  		ex_write_reg_sel : in std_logic_vector(4 downto 0); -- see the Reg. Dest. mux in the pipeline archteicture diagram
+  		ex_write_reg_sel : in std_logic_vector(4 downto 0); -- see the Reg. Dest. mux in the pipeline architecture diagram
   		mem_write_reg_sel : std_logic_vector(4 downto 0)-- END Register signals
   	    );
+END COMPONENT;
 
 COMPONENT mem_wb
 	PORT (CLK           : in  std_logic;
@@ -264,6 +265,7 @@ COMPONENT mem_wb
   		wb_write_reg_sel : std_logic_vector(4 downto 0)
   	-- END Register signals
   	    );
+END COMPONENT;
 
 SIGNAL	alu_iA :  STD_LOGIC_VECTOR(31 DOWNTO 0);
 SIGNAL	alu_iB :  STD_LOGIC_VECTOR(31 DOWNTO 0);
@@ -335,8 +337,10 @@ SIGNAL	ex_rt_sel : std_logic_vector(4 downto 0);
 SIGNAL	ex_rd_sel : std_logic_vector(4 downto 0);
 SIGNAL	id_extended_immediate : std_logic_vector(31 downto 0);
 SIGNAL	ex_extended_immediate : std_logic_vector(31 downto 0);
+SIGNAL	ex_write_reg_sel : std_logic_vector(4 downto 0);
 
 -- EX/MEM signals
+SIGNAL	ex_ALU_out: std_logic_vector(31 downto 0);
 SIGNAL	mem_flush, mem_stall, exmem_reset : std_logic;
 SIGNAL	mem_instruction  : std_logic_vector(31 downto 0);
 SIGNAL	mem_pc_plus_4 : std_logic_vector(31 downto 0);
@@ -357,34 +361,34 @@ SIGNAL	mem_rt_data : std_logic_vector(31 downto 0);
 SIGNAL	mem_write_reg_sel : std_logic_vector(4 downto 0);
 
 -- MEM/WB signals
-SIGNAL	CLK           :  std_logic;
 SIGNAL	wb_flush, wb_stall, memwb_reset : std_logic;
 SIGNAL	wb_instruction  : std_logic_vector(31 downto 0);
 SIGNAL	wb_pc_plus_4 : std_logic_vector(31 downto 0);
 
--- CONTROL signals
+-- CONTROL signalsreset
 SIGNAL	wb_reg_dest   : std_logic;
 SIGNAL	wb_mem_to_reg : std_logic;
 SIGNAL	wb_reg_write  : std_logic;
 -- END CONTROL signals
 
 -- ALU signals
-SIGNAL	wb_ALU_: std_logic_vector(31 downto 0);
+SIGNAL	wb_ALU_out: std_logic_vector(31 downto 0);
 -- END ALU signals
 
 -- Memory signals
-SIGNAL	wb_dmem_: std_logic_vector(31 downto 0);
+SIGNAL	mem_dmem_out: std_logic_vector(31 downto 0);
+SIGNAL	wb_dmem_out: std_logic_vector(31 downto 0);
 -- END Memory signals
 
 -- Register signals
-SIGNAL	wb_write_reg_sel : std_logic_vector(4 downto 0)
+SIGNAL	wb_write_reg_sel : std_logic_vector(4 downto 0);
 -- END Register signals
 
 BEGIN 
 
 b2v_ALU : alu
 PORT MAP(ALU_OP => ex_ALU_op,
-		 i_A => ex_rs_sel,
+		 i_A => ex_rs_data,
 		 i_B => alu_iB,
 		 shamt => alu_shamt,
 		 zero => alu_zero,
@@ -393,9 +397,9 @@ PORT MAP(ALU_OP => ex_ALU_op,
 
 b2v_alu_in_mux : mux21_32bit
 PORT MAP(i_sel => ex_ALU_src,
-		 i_0 => ex_rt_sel,
+		 i_0 => ex_rt_data,
 		 i_1 => ex_extended_immediate,
-		 o_mux => ex_rt_sel);
+		 o_mux => alu_iB);
 
 
 b2v_branch_adder : adder_32
@@ -488,13 +492,13 @@ PORT MAP(i_instruction => instr,
 
 b2v_pc_adder : adder_32
 PORT MAP(i_A => pc_out,
-		 i_B => '4',
+		 i_B => ((31 downto 3 => '0') & "100"),
 		 o_F => if_pc_plus_4);
 
 
 b2v_PC_reg : pc_reg
 PORT MAP(CLK => CLK,
-		 reset => PC_RESET,
+		 reset => RESET,
 		 i_next_PC => next_PC,
 		 o_PC => pc_out);
 
@@ -503,7 +507,7 @@ b2v_reg_in_mux : mux21_5bit
 PORT MAP(i_sel => o_reg_dest_out,
 		 i_0 => id_instruction(20 DOWNTO 16),
 		 i_1 => id_instruction(15 DOWNTO 11),
-		 o_mux => reg_w_sel);
+		 o_mux => ex_write_reg_sel);
 
 
 b2v_reg_w_data_mux : mux21_32bit
@@ -516,7 +520,7 @@ PORT MAP(i_sel => mem_to_reg,
 b2v_register_file : register_file
 PORT MAP(CLK => CLK,
 		 w_en => reg_wrt,
-		 reset => REG_RESET,
+		 reset => RESET,
 		 rs_sel => id_instruction(25 DOWNTO 21),
 		 rt_sel => id_instruction(20 DOWNTO 16),
 		 w_data => reg_w_data,
@@ -528,8 +532,9 @@ b2v_if_id : if_id
 PORT MAP(CLK => CLK,
 		id_flush => id_flush,
 		id_stall => id_stall,
-		ifid_reset => REG_RESET,
+		ifid_reset => RESET,
 		if_instruction => instr,
+		id_instruction => id_instruction,
 		if_pc_plus_4 => if_pc_plus_4,
 		id_pc_plus_4 => id_pc_plus_4);
 
@@ -537,7 +542,7 @@ b2v_id_ex : id_ex
 PORT MAP(CLK => CLK,
 		ex_flush => ex_flush,
 		ex_stall => ex_stall,	
-		idex_reset => reset,	
+		idex_reset => RESET,	
 		id_instruction => id_instruction,	
 		ex_instruction => ex_instruction,	
 		id_pc_plus_4 => id_pc_plus_4,	
@@ -556,20 +561,20 @@ PORT MAP(CLK => CLK,
 		ex_mem_write => ex_mem_write,	
 		ex_ALU_src => ex_ALU_src,	
 		ex_reg_write => ex_reg_write,	
-		id_rs_data => rs_data,		
-		id_rt_data => rt_data,		
+		id_rs_data => id_rs_data,		
+		id_rt_data => id_rt_data,		
 		ex_rs_data => ex_rs_data,		
 		ex_rt_data => ex_rt_data,		
-		id_rs_sel => rs_sel,		
-		id_rt_sel => rt_sel,		
-		id_rd_sel => w_data,		
+		id_rs_sel => id_rs_sel,		
+		id_rt_sel => id_rt_sel,		
+		id_rd_sel => id_rd_sel,		
 		ex_rs_sel => ex_rs_sel,		
 		ex_rt_sel => ex_rt_sel,		
 		ex_rd_sel => ex_rd_sel,		
 		id_extended_immediate => id_extended_immediate,
 		ex_extended_immediate => ex_extended_immediate);
 
-b2v_ex_mem => ex_mem
+b2v_ex_mem : ex_mem
 PORT MAP(CLK => CLK,
 		mem_flush => mem_flush, 
 		mem_stall => mem_stall,
@@ -596,7 +601,7 @@ PORT MAP(CLK => CLK,
 
 
 b2v_mem_wb : mem_wb
-PORT MAP(CLK  => CLK          
+PORT MAP(CLK  => CLK,          
 		wb_flush => wb_flush,
 		wb_stall => wb_stall,
 		memwb_reset => memwb_reset,
@@ -606,7 +611,7 @@ PORT MAP(CLK  => CLK
        	wb_pc_plus_4  => wb_pc_plus_4,
 
   	-- CONTROL signals
-        mem_reg_dest  => mem=reg_dest, 
+        mem_reg_dest  => mem_reg_dest, 
   	    mem_mem_to_reg => mem_mem_to_reg, 
   	    mem_reg_write  => mem_mem_write,
   	    wb_reg_dest   => wb_reg_dest,
@@ -626,7 +631,7 @@ PORT MAP(CLK  => CLK
 
 	-- Register signals
   		mem_write_reg_sel => mem_write_reg_sel,
-  		wb_write_reg_sel => wb_write_reg_sel, 
+  		wb_write_reg_sel => wb_write_reg_sel
   	-- END Register signals
   	    );
 		
