@@ -195,14 +195,75 @@ END COMPONENT;
 COMPONENT if_id
 	PORT (CLK : IN STD_LOGIC;
 		id_flush, id_stall, ifid_reset : in std_logic;
-		if_instruction  : in std_logic_vector(31 downto 0);
-		id_instruction  : out std_logic_vector(31 downto 0);
-		if_pc_plus_4 : in std_logic_vector(31 downto 0);
-		id_pc_plus_4 : out std_logic_vector(31 downto 0));
-	);
+		if_instruction  : in std_logic_vector(31 DOWNTO 0);
+		id_instruction  : out std_logic_vector(31 DOWNTO 0);
+		if_pc_plus_4 : in std_logic_vector(31 DOWNTO 0);
+		id_pc_plus_4 : out std_logic_vector(31 DOWNTO 0));
 END COMPONENT;
 
+COMPONENT ex_mem
+	PORT (CLK           : in  std_logic;
+		mem_flush, mem_stall, exmem_reset : in std_logic;
+		ex_instruction  : in std_logic_vector(31 downto 0); -- pass instruction along (useful for debugging)
+        mem_instruction  : out std_logic_vector(31 downto 0);
+        ex_pc_plus_4 : in std_logic_vector(31 downto 0);
+       	mem_pc_plus_4 : out std_logic_vector(31 downto 0);
 
+  	-- CONTROL signals
+        ex_reg_dest   : in std_logic;
+  	    ex_mem_to_reg : in std_logic;
+  	    ex_mem_write  : in std_logic;
+  	    ex_reg_write  : in std_logic;
+  	    mem_reg_dest   : out std_logic;
+  	    mem_mem_to_reg : out std_logic;
+  	    mem_mem_write  : out std_logic;
+  	    mem_reg_write  : out std_logic;
+  	-- END CONTROL signals
+
+  	-- ALU signals
+		ex_ALU_out : in std_logic_vector(31 downto 0);
+		mem_ALU_out : out std_logic_vector(31 downto 0);
+  	-- END ALU signals
+
+	-- Register signals
+		ex_rt_data : in std_logic_vector(31 downto 0);
+		mem_rt_data : out std_logic_vector(31 downto 0);
+  		ex_write_reg_sel : in std_logic_vector(4 downto 0); -- see the Reg. Dest. mux in the pipeline archteicture diagram
+  		mem_write_reg_sel : out std_logic_vector(4 downto 0)-- END Register signals
+  	    );
+
+COMPONENT mem_wb
+	PORT (CLK           : in  std_logic;
+		wb_flush, wb_stall, memwb_reset : in std_logic;
+		mem_instruction  : in std_logic_vector(31 downto 0); -- pass instruction along (useful for debugging)
+        wb_instruction  : out std_logic_vector(31 downto 0);
+        mem_pc_plus_4 : in std_logic_vector(31 downto 0);
+       	wb_pc_plus_4 : out std_logic_vector(31 downto 0);
+
+  	-- CONTROL signals
+        mem_reg_dest   : in std_logic;
+  	    mem_mem_to_reg : in std_logic;
+  	    mem_reg_write  : in std_logic;
+  	    wb_reg_dest   : out std_logic;
+  	    wb_mem_to_reg : out std_logic;
+  	    wb_reg_write  : out std_logic;
+  	-- END CONTROL signals
+
+  	-- ALU signals
+		mem_ALU_out : in std_logic_vector(31 downto 0);
+		wb_ALU_out : out std_logic_vector(31 downto 0);
+  	-- END ALU signals
+
+  	-- Memory signals
+		mem_dmem_out : in std_logic_vector(31 downto 0);
+		wb_dmem_out : out std_logic_vector(31 downto 0);
+  	-- END Memory signals
+
+	-- Register signals
+  		mem_write_reg_sel : in std_logic_vector(4 downto 0);
+  		wb_write_reg_sel : out std_logic_vector(4 downto 0)
+  	-- END Register signals
+  	    );
 
 SIGNAL	alu_iA :  STD_LOGIC_VECTOR(31 DOWNTO 0);
 SIGNAL	alu_iB :  STD_LOGIC_VECTOR(31 DOWNTO 0);
@@ -237,20 +298,110 @@ SIGNAL	reg_w_sel :  STD_LOGIC_VECTOR(4 DOWNTO 0);
 SIGNAL	reg_wrt :  STD_LOGIC;
 SIGNAL	rt_data :  STD_LOGIC_VECTOR(31 DOWNTO 0);
 
--- IF/ID input signals
-SIGNAL	id_flush, id_stall, ifid_reset : in std_logic;
-SIGNAL 	if_instruction  : in std_logic_vector(31 downto 0);
-SIGNAL 	if_pc_plus_4 : in std_logic_vector(31 downto 0);
-
--- IF/ID output signals
+-- IF/ID signals
+SIGNAL	id_flush, id_stall, ifid_reset : std_logic;
+SIGNAL 	if_instruction  : std_logic_vector(31 DOWNTO 0);
+SIGNAL 	if_pc_plus_4 : std_logic_vector(31 DOWNTO 0);
 SIGNAL	id_instruction : STD_LOGIC_VECTOR(31 DOWNTO 0);
 SIGNAL	id_pc_plus_4 : STD_LOGIC_VECTOR(31 DOWNTO 0);
+
+-- ID/EX signals
+SIGNAL	ex_flush, ex_stall, idex_reset  : std_logic;
+SIGNAL	ex_instruction  : std_logic_vector(31 DOWNTO 0);
+SIGNAL	ex_pc_plus_4 : std_logic_vector(31 DOWNTO 0);
+SIGNAL	id_reg_dest   : std_logic;
+SIGNAL	id_branch    : std_logic;
+SIGNAL	id_mem_to_reg : std_logic;
+SIGNAL	id_ALU_op    : std_logic_vector(3 downto 0);
+SIGNAL	id_mem_write  : std_logic;
+SIGNAL	id_ALU_src   : std_logic;
+SIGNAL	id_reg_write  : std_logic;
+SIGNAL	ex_reg_dest   : std_logic;
+SIGNAL	ex_branch    : std_logic;
+SIGNAL	ex_mem_to_reg : std_logic;
+SIGNAL	ex_ALU_op    : std_logic_vector(3 downto 0);
+SIGNAL	ex_mem_write  : std_logic;
+SIGNAL	ex_ALU_src   : std_logic;
+SIGNAL	ex_reg_write  : std_logic;
+SIGNAL	id_rs_data : std_logic_vector(31 downto 0);
+SIGNAL	id_rt_data : std_logic_vector(31 downto 0);
+SIGNAL	ex_rs_data : std_logic_vector(31 downto 0);
+SIGNAL	ex_rt_data : std_logic_vector(31 downto 0);
+SIGNAL	id_rs_sel : std_logic_vector(4 downto 0);
+SIGNAL	id_rt_sel : std_logic_vector(4 downto 0);
+SIGNAL	id_rd_sel : std_logic_vector(4 downto 0);
+SIGNAL	ex_rs_sel : std_logic_vector(4 downto 0);
+SIGNAL	ex_rt_sel : std_logic_vector(4 downto 0);
+SIGNAL	ex_rd_sel : std_logic_vector(4 downto 0);
+SIGNAL	id_extended_immediate : std_logic_vector(31 downto 0);
+SIGNAL	ex_extended_immediate : std_logic_vector(31 downto 0);
+
+-- EX/MEM signals
+SIGNAL	mem_flush, mem_stall, exmem_reset : std_logic;
+SIGNAL	ex_instruction  : std_logic_vector(31 downto 0); -- pass instruction along (useful for debugging)
+SIGNAL	mem_instruction  : std_logic_vector(31 downto 0);
+SIGNAL	ex_pc_plus_4 : std_logic_vector(31 downto 0);
+SIGNAL	mem_pc_plus_4 : std_logic_vector(31 downto 0);
+
+-- CONTROL signals
+SIGNAL	ex_reg_dest   : std_logic;
+SIGNAL	ex_mem_to_reg : std_logic;
+SIGNAL	ex_mem_write  : std_logic;
+SIGNAL	ex_reg_write  : std_logic;
+SIGNAL	mem_reg_dest   : std_logic;
+SIGNAL	mem_mem_to_reg : std_logic;
+SIGNAL	mem_mem_write  : std_logic;
+SIGNAL	mem_reg_write  : std_logic;
+-- END CONTROL signals
+
+-- ALU signals
+SIGNAL	ex_ALU_: std_logic_vector(31 downto 0);
+SIGNAL	mem_ALU_: std_logic_vector(31 downto 0);
+-- END ALU signals
+
+-- Register signals
+SIGNAL	ex_rt_data : std_logic_vector(31 downto 0);
+SIGNAL	mem_rt_data : std_logic_vector(31 downto 0);
+SIGNAL	ex_write_reg_sel : std_logic_vector(4 downto 0); -- see the Reg. Dest. mux the pipeline archteicture diagram
+SIGNAL	mem_write_reg_sel : std_logic_vector(4 downto 0);
+
+-- MEM/WB signals
+SIGNAL	CLK           :  std_logic;
+SIGNAL	wb_flush, wb_stall, memwb_reset : std_logic;
+SIGNAL	mem_instruction  : std_logic_vector(31 downto 0); -- pass instruction along (useful for debugging)
+SIGNAL	wb_instruction  : std_logic_vector(31 downto 0);
+SIGNAL	mem_pc_plus_4 : std_logic_vector(31 downto 0);
+SIGNAL	wb_pc_plus_4 : std_logic_vector(31 downto 0);
+
+-- CONTROL signals
+SIGNAL	mem_reg_dest   : std_logic;
+SIGNAL	mem_mem_to_reg : std_logic;
+SIGNAL	mem_reg_write  : std_logic;
+SIGNAL	wb_reg_dest   : std_logic;
+SIGNAL	wb_mem_to_reg : std_logic;
+SIGNAL	wb_reg_write  : std_logic;
+-- END CONTROL signals
+
+-- ALU signals
+SIGNAL	mem_ALU_: std_logic_vector(31 downto 0);
+SIGNAL	wb_ALU_: std_logic_vector(31 downto 0);
+-- END ALU signals
+
+-- Memory signals
+SIGNAL	mem_dmem_: std_logic_vector(31 downto 0);
+SIGNAL	wb_dmem_: std_logic_vector(31 downto 0);
+-- END Memory signals
+
+-- Register signals
+SIGNAL	mem_write_reg_sel : std_logic_vector(4 downto 0);
+SIGNAL	wb_write_reg_sel : std_logic_vector(4 downto 0)
+-- END Register signals
 
 BEGIN 
 
 b2v_ALU : alu
-PORT MAP(ALU_OP => alu_op,
-		 i_A => alu_iA,
+PORT MAP(ALU_OP => ex_ALU_op,
+		 i_A => ex_rs_sel,
 		 i_B => alu_iB,
 		 shamt => alu_shamt,
 		 zero => alu_zero,
@@ -258,10 +409,10 @@ PORT MAP(ALU_OP => alu_op,
 
 
 b2v_alu_in_mux : mux21_32bit
-PORT MAP(i_sel => alu_src_sel,
-		 i_0 => rt_data,
-		 i_1 => imm_extended,
-		 o_mux => alu_iB);
+PORT MAP(i_sel => ex_ALU_src,
+		 i_0 => ex_rt_sel,
+		 i_1 => ex_extended_immediate,
+		 o_mux => ex_rt_sel);
 
 
 b2v_branch_adder : adder_32
@@ -319,8 +470,8 @@ PORT MAP(i_to_shift => imm_extended,
 
 
 b2v_imm_sign_extender : sign_extender_16_32
-PORT MAP(i_to_extend => instr(15 DOWNTO 0),
-		 o_extended => imm_extended);
+PORT MAP(i_to_extend => id_instruction(15 DOWNTO 0),
+		 o_extended => id_extended_immediate);
 
 
 
@@ -387,27 +538,27 @@ PORT MAP(CLK => CLK,
 		 rt_sel => instr(20 DOWNTO 16),
 		 w_data => reg_w_data,
 		 w_sel => reg_w_sel,
-		 rs_data => alu_iA,
-		 rt_data => rt_data);
+		 rs_data => id_rs_data,
+		 rt_data => id_rt_data);
 
 b2v_if_id : if_id
 PORT MAP(CLK => CLK,
 		id_flush => id_flush,
 		id_stall => id_stall,
-		ifid_reset => reset,
+		ifid_reset => REG_RESET,
 		if_instruction => instr,
 		if_pc_plus_4 => if_pc_plus_4,
 		id_pc_plus_4 => id_pc_plus_4);
-		
+
 b2v_id_ex : id_ex
 PORT MAP(CLK => CLK,
-		ex_flush => ,			
-		ex_stall => ,	
+		ex_flush => ex_flush,
+		ex_stall => ex_stall,	
 		idex_reset => reset,	
 		id_instruction => id_instruction,	
-		ex_instruction => ,	
+		ex_instruction => ex_instruction,	
 		id_pc_plus_4 => id_pc_plus_4,	
-		ex_pc_plus_4 => ,	
+		ex_pc_plus_4 => ex_pc_plus_4,	
 		id_reg_dest	 => o_reg_dest_out,	
 		id_branch => branch_sel,	
 		id_mem_to_reg => mem_to_reg,	
@@ -415,23 +566,23 @@ PORT MAP(CLK => CLK,
 		id_mem_write => dmem_wren,	
 		id_ALU_src => alu_src_sel,	
 		id_reg_write => reg_wrt,	
-		ex_reg_dest => ,	
-		ex_branch => ,	
-		ex_mem_to_reg => ,	
-		ex_ALU_op => ,	
-		ex_mem_write => ,	
-		ex_ALU_src => ,	
-		ex_reg_write => ,	
+		ex_reg_dest => ex_reg_dest,	
+		ex_branch => ex_branch,	
+		ex_mem_to_reg => ex_mem_to_reg,	
+		ex_ALU_op => ex_ALU_op,	
+		ex_mem_write => ex_mem_write,	
+		ex_ALU_src => ex_ALU_src,	
+		ex_reg_write => ex_reg_write,	
 		id_rs_data => rs_data,		
 		id_rt_data => rt_data,		
-		ex_rs_data => ,		
-		ex_rt_data => ,		
+		ex_rs_data => ex_rs_data,		
+		ex_rt_data => ex_rt_data,		
 		id_rs_sel => rs_sel,		
 		id_rt_sel => rt_sel,		
 		id_rd_sel => w_data,		
-		ex_rs_sel => ,		
-		ex_rt_sel => ,		
-		ex_rd_sel => ,		
+		ex_rs_sel => ex_rs_sel,		
+		ex_rt_sel => ex_rt_sel,		
+		ex_rd_sel => ex_rd_sel,		
 		id_extended_immediate,
 		ex_extended_immediate);
 
