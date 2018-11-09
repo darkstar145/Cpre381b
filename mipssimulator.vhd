@@ -192,6 +192,17 @@ COMPONENT id_ex
 	);
 END COMPONENT;
 
+COMPONENT if_id
+	PORT (CLK : IN STD_LOGIC;
+		id_flush, id_stall, ifid_reset : in std_logic;
+		if_instruction  : in std_logic_vector(31 downto 0);
+		id_instruction  : out std_logic_vector(31 downto 0);
+		if_pc_plus_4 : in std_logic_vector(31 downto 0);
+		id_pc_plus_4 : out std_logic_vector(31 downto 0));
+	);
+END COMPONENT;
+
+
 
 SIGNAL	alu_iA :  STD_LOGIC_VECTOR(31 DOWNTO 0);
 SIGNAL	alu_iB :  STD_LOGIC_VECTOR(31 DOWNTO 0);
@@ -226,10 +237,16 @@ SIGNAL	reg_w_sel :  STD_LOGIC_VECTOR(4 DOWNTO 0);
 SIGNAL	reg_wrt :  STD_LOGIC;
 SIGNAL	rt_data :  STD_LOGIC_VECTOR(31 DOWNTO 0);
 
+-- IF/ID input signals
+SIGNAL	id_flush, id_stall, ifid_reset : in std_logic;
+SIGNAL 	if_instruction  : in std_logic_vector(31 downto 0);
+SIGNAL 	if_pc_plus_4 : in std_logic_vector(31 downto 0);
+
+-- IF/ID output signals
+SIGNAL	id_instruction : STD_LOGIC_VECTOR(31 DOWNTO 0);
+SIGNAL	id_pc_plus_4 : STD_LOGIC_VECTOR(31 DOWNTO 0);
 
 BEGIN 
-
-
 
 b2v_ALU : alu
 PORT MAP(ALU_OP => alu_op,
@@ -372,14 +389,24 @@ PORT MAP(CLK => CLK,
 		 w_sel => reg_w_sel,
 		 rs_data => alu_iA,
 		 rt_data => rt_data);
-		 
+
+b2v_if_id : if_id
+PORT MAP(CLK => CLK,
+		id_flush => id_flush,
+		id_stall => id_stall,
+		ifid_reset => reset,
+		if_instruction => instr,
+		if_pc_plus_4 => if_pc_plus_4,
+		id_pc_plus_4 => id_pc_plus_4);
+		
+b2v_id_ex : id_ex
 PORT MAP(CLK => CLK,
 		ex_flush => ,			
 		ex_stall => ,	
 		idex_reset => reset,	
-		id_instruction => instr,	
+		id_instruction => id_instruction,	
 		ex_instruction => ,	
-		id_pc_plus_4 => pc4,	
+		id_pc_plus_4 => id_pc_plus_4,	
 		ex_pc_plus_4 => ,	
 		id_reg_dest	 => o_reg_dest_out,	
 		id_branch => branch_sel,	
