@@ -355,8 +355,8 @@ SIGNAL	mem_reg_write  : std_logic;
 -- END CONTROL signals
 
 -- ALU signals
-SIGNAL	ex_ALU_: std_logic_vector(31 downto 0);
-SIGNAL	mem_ALU_: std_logic_vector(31 downto 0);
+SIGNAL	ex_ALU_out: std_logic_vector(31 downto 0);
+SIGNAL	mem_ALU_out: std_logic_vector(31 downto 0);
 -- END ALU signals
 
 -- Register signals
@@ -405,7 +405,7 @@ PORT MAP(ALU_OP => ex_ALU_op,
 		 i_B => alu_iB,
 		 shamt => alu_shamt,
 		 zero => alu_zero,
-		 ALU_out => alu_out);
+		 ALU_out => ex_ALU_out);
 
 
 b2v_alu_in_mux : mux21_32bit
@@ -416,14 +416,14 @@ PORT MAP(i_sel => ex_ALU_src,
 
 
 b2v_branch_adder : adder_32
-PORT MAP(i_A => pc4,
-		 i_B => imm_shifted,
+PORT MAP(i_A => id_pc_plus_4,
+		 i_B => id_extended_immediate,
 		 o_F => branch_addr);
 
 
 b2v_branch_mux : mux21_32bit
 PORT MAP(i_sel => branch_sel,
-		 i_0 => pc4,
+		 i_0 => id_pc_plus_4,
 		 i_1 => branch_addr,
 		 o_mux => branch_mux_out);
 
@@ -439,10 +439,10 @@ GENERIC MAP(depth_exp_of_2 => 10,
 			mif_filename => "dmem.mif"
 			)
 PORT MAP(clock => CLK,
-		 wren => dmem_wren,
-		 address => alu_out(11 DOWNTO 2),
+		 wren => mem_mem_write,
+		 address => mem_ALU_out(11 DOWNTO 2),
 		 byteena => dmem_byteena,
-		 data => rt_data,
+		 data => mem_rt_data,
 		 q => dmem_out);
 
 
@@ -465,7 +465,7 @@ PORT MAP(clock => CLK,
 
 
 b2v_imm_addr_shifter : sll_2
-PORT MAP(i_to_shift => imm_extended,
+PORT MAP(i_to_shift => id_instruction,
 		 o_shifted => imm_shifted);
 
 
@@ -505,8 +505,8 @@ PORT MAP(i_instruction => instr,
 
 b2v_pc_adder : adder_32
 PORT MAP(i_A => pc_out,
-		 i_B => SET_TO_4,
-		 o_F => pc4);
+		 i_B => '4',
+		 o_F => if_pc_plus_4);
 
 
 b2v_PC_reg : pc_reg
@@ -518,15 +518,15 @@ PORT MAP(CLK => CLK,
 
 b2v_reg_in_mux : mux21_5bit
 PORT MAP(i_sel => o_reg_dest_out,
-		 i_0 => instr(20 DOWNTO 16),
-		 i_1 => instr(15 DOWNTO 11),
+		 i_0 => id_instruction(20 DOWNTO 16),
+		 i_1 => id_instruction(15 DOWNTO 11),
 		 o_mux => reg_w_sel);
 
 
 b2v_reg_w_data_mux : mux21_32bit
 PORT MAP(i_sel => mem_to_reg,
-		 i_0 => alu_out,
-		 i_1 => dmem_out,
+		 i_0 => wb_ALU_out,
+		 i_1 => wb_dmem_out,
 		 o_mux => reg_w_data);
 
 
@@ -534,8 +534,8 @@ b2v_register_file : register_file
 PORT MAP(CLK => CLK,
 		 w_en => reg_wrt,
 		 reset => REG_RESET,
-		 rs_sel => instr(25 DOWNTO 21),
-		 rt_sel => instr(20 DOWNTO 16),
+		 rs_sel => id_instruction(25 DOWNTO 21),
+		 rt_sel => id_instruction(20 DOWNTO 16),
 		 w_data => reg_w_data,
 		 w_sel => reg_w_sel,
 		 rs_data => id_rs_data,
@@ -583,9 +583,8 @@ PORT MAP(CLK => CLK,
 		ex_rs_sel => ex_rs_sel,		
 		ex_rt_sel => ex_rt_sel,		
 		ex_rd_sel => ex_rd_sel,		
-		id_extended_immediate,
-		ex_extended_immediate);
-
+		id_extended_immediate => id_extended_immediate,
+		ex_extended_immediate) => ex_extended_immediate;
 
 alu_shamt <= "00000";
 dmem_byteena <= "1111";
