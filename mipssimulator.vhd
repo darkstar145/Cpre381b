@@ -38,8 +38,8 @@ COMPONENT alu
 		 i_A : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
 		 i_B : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
 		 shamt : IN STD_LOGIC_VECTOR(4 DOWNTO 0);
-		 zero : STD_LOGIC;
-		 ALU_out : STD_LOGIC_VECTOR(31 DOWNTO 0)
+		 zero : OUT STD_LOGIC;
+		 ALU_out : OUT STD_LOGIC_VECTOR(31 DOWNTO 0)
 	);
 END COMPONENT;
 
@@ -47,21 +47,21 @@ COMPONENT mux21_32bit
 	PORT(i_sel : IN STD_LOGIC;
 		 i_0 : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
 		 i_1 : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
-		 o_mux : STD_LOGIC_VECTOR(31 DOWNTO 0)
+		 o_mux : OUT STD_LOGIC_VECTOR(31 DOWNTO 0)
 	);
 END COMPONENT;
 
 COMPONENT adder_32
 	PORT(i_A : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
 		 i_B : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
-		 o_F : STD_LOGIC_VECTOR(31 DOWNTO 0)
+		 o_F : OUT STD_LOGIC_VECTOR(31 DOWNTO 0)
 	);
 END COMPONENT;
 
 COMPONENT concat
 	PORT(i_A : IN STD_LOGIC_VECTOR(27 DOWNTO 0);
 		 i_B : IN STD_LOGIC_VECTOR(3 DOWNTO 0);
-		 o_F : STD_LOGIC_VECTOR(31 DOWNTO 0)
+		 o_F : OUT STD_LOGIC_VECTOR(31 DOWNTO 0)
 	);
 END COMPONENT;
 
@@ -74,14 +74,14 @@ GENERIC (depth_exp_of_2 : INTEGER;
 		 address : IN STD_LOGIC_VECTOR(9 DOWNTO 0);
 		 byteena : IN STD_LOGIC_VECTOR(3 DOWNTO 0);
 		 data : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
-		 q : STD_LOGIC_VECTOR(31 DOWNTO 0)
+		 q : OUT STD_LOGIC_VECTOR(31 DOWNTO 0)
 	);
 END COMPONENT;
 
 COMPONENT and_2
 	PORT(i_A : IN STD_LOGIC;
 		 i_B : IN STD_LOGIC;
-		 o_F : STD_LOGIC
+		 o_F : OUT STD_LOGIC
 	);
 END COMPONENT;
 
@@ -94,32 +94,32 @@ GENERIC (depth_exp_of_2 : INTEGER;
 		 address : IN STD_LOGIC_VECTOR(9 DOWNTO 0);
 		 byteena : IN STD_LOGIC_VECTOR(3 DOWNTO 0);
 		 data : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
-		 q : STD_LOGIC_VECTOR(31 DOWNTO 0)
+		 q : OUT STD_LOGIC_VECTOR(31 DOWNTO 0)
 	);
 END COMPONENT;
 
 COMPONENT sll_2
 	PORT(i_to_shift : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
-		 o_shifted : STD_LOGIC_VECTOR(31 DOWNTO 0)
+		 o_shifted : OUT STD_LOGIC_VECTOR(31 DOWNTO 0)
 	);
 END COMPONENT;
 
 COMPONENT sign_extender_16_32
 	PORT(i_to_extend : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
-		 o_extended : STD_LOGIC_VECTOR(31 DOWNTO 0)
+		 o_extended : OUT STD_LOGIC_VECTOR(31 DOWNTO 0)
 	);
 END COMPONENT;
 
 COMPONENT main_control
 	PORT(i_instruction : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
-		 o_reg_dest : STD_LOGIC;
-		 o_jump : STD_LOGIC;
-		 o_branch : STD_LOGIC;
-		 o_mem_to_reg : STD_LOGIC;
-		 o_mem_write : STD_LOGIC;
-		 o_ALU_src : STD_LOGIC;
-		 o_reg_write : STD_LOGIC;
-		 o_ALU_op : STD_LOGIC_VECTOR(3 DOWNTO 0)
+		 o_reg_dest : OUT STD_LOGIC;
+		 o_jump : OUT STD_LOGIC;
+		 o_branch : OUT STD_LOGIC;
+		 o_mem_to_reg : OUT STD_LOGIC;
+		 o_mem_write : OUT STD_LOGIC;
+		 o_ALU_src : OUT STD_LOGIC;
+		 o_reg_write : OUT STD_LOGIC;
+		 o_ALU_op : OUT STD_LOGIC_VECTOR(3 DOWNTO 0)
 	);
 END COMPONENT;
 
@@ -127,7 +127,7 @@ COMPONENT pc_reg
 	PORT(CLK : IN STD_LOGIC;
 		 reset : IN STD_LOGIC;
 		 i_next_PC : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
-		 o_PC : STD_LOGIC_VECTOR(31 DOWNTO 0)
+		 o_PC : OUT STD_LOGIC_VECTOR(31 DOWNTO 0)
 	);
 END COMPONENT;
 
@@ -135,7 +135,7 @@ COMPONENT mux21_5bit
 	PORT(i_sel : IN STD_LOGIC;
 		 i_0 : IN STD_LOGIC_VECTOR(4 DOWNTO 0);
 		 i_1 : IN STD_LOGIC_VECTOR(4 DOWNTO 0);
-		 o_mux : STD_LOGIC_VECTOR(4 DOWNTO 0)
+		 o_mux : OUT STD_LOGIC_VECTOR(4 DOWNTO 0)
 	);
 END COMPONENT;
 
@@ -147,8 +147,8 @@ COMPONENT register_file
 		 rt_sel : IN STD_LOGIC_VECTOR(4 DOWNTO 0);
 		 w_data : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
 		 w_sel : IN STD_LOGIC_VECTOR(4 DOWNTO 0);
-		 rs_data : STD_LOGIC_VECTOR(31 DOWNTO 0);
-		 rt_data : STD_LOGIC_VECTOR(31 DOWNTO 0)
+		 rs_data : OUT STD_LOGIC_VECTOR(31 DOWNTO 0);
+		 rt_data : OUT STD_LOGIC_VECTOR(31 DOWNTO 0)
 	);
 END COMPONENT;
 
@@ -196,40 +196,40 @@ COMPONENT if_id
 	PORT (CLK : IN STD_LOGIC;
 		id_flush, id_stall, ifid_reset : in std_logic;
 		if_instruction  : in std_logic_vector(31 DOWNTO 0);
-		id_instruction  : std_logic_vector(31 DOWNTO 0);
+		id_instruction  : OUT STD_logic_vector(31 DOWNTO 0);
 		if_pc_plus_4 : in std_logic_vector(31 DOWNTO 0);
-		id_pc_plus_4 : std_logic_vector(31 DOWNTO 0));
+		id_pc_plus_4 : OUT STD_logic_vector(31 DOWNTO 0));
 END COMPONENT;
 
 COMPONENT ex_mem
 	PORT (CLK           : in  std_logic;
 		mem_flush, mem_stall, exmem_reset : in std_logic;
 		ex_instruction  : in std_logic_vector(31 downto 0); -- pass instruction along (useful for debugging)
-        mem_instruction  : std_logic_vector(31 downto 0);
+        mem_instruction  : OUT STD_logic_vector(31 downto 0);
         ex_pc_plus_4 : in std_logic_vector(31 downto 0);
-       	mem_pc_plus_4 : std_logic_vector(31 downto 0);
+       	mem_pc_plus_4 : OUT STD_logic_vector(31 downto 0);
 
   	-- CONTROL signals
         ex_reg_dest   : in std_logic;
   	    ex_mem_to_reg : in std_logic;
   	    ex_mem_write  : in std_logic;
   	    ex_reg_write  : in std_logic;
-  	    mem_reg_dest   : std_logic;
-  	    mem_mem_to_reg : std_logic;
-  	    mem_mem_write  : std_logic;
-  	    mem_reg_write  : std_logic;
+  	    mem_reg_dest   : OUT STD_logic;
+  	    mem_mem_to_reg : OUT STD_logic;
+  	    mem_mem_write  : OUT STD_logic;
+  	    mem_reg_write  : OUT STD_logic;
   	-- END CONTROL signals
 
   	-- ALU signals
 		ex_ALU_out : in std_logic_vector(31 downto 0);
-		mem_ALU_out : std_logic_vector(31 downto 0);
+		mem_ALU_out : OUT STD_logic_vector(31 downto 0);
   	-- END ALU signals
 
 	-- Register signals
 		ex_rt_data : in std_logic_vector(31 downto 0);
-		mem_rt_data : std_logic_vector(31 downto 0);
+		mem_rt_data : OUT STD_logic_vector(31 downto 0);
   		ex_write_reg_sel : in std_logic_vector(4 downto 0); -- see the Reg. Dest. mux in the pipeline architecture diagram
-  		mem_write_reg_sel : std_logic_vector(4 downto 0)-- END Register signals
+  		mem_write_reg_sel : OUT STD_logic_vector(4 downto 0)-- END Register signals
   	    );
 END COMPONENT;
 
@@ -237,55 +237,55 @@ COMPONENT mem_wb
 	PORT (CLK           : in  std_logic;
 		wb_flush, wb_stall, memwb_reset : in std_logic;
 		mem_instruction  : in std_logic_vector(31 downto 0); -- pass instruction along (useful for debugging)
-        wb_instruction  : std_logic_vector(31 downto 0);
+        wb_instruction  : OUT STD_logic_vector(31 downto 0);
         mem_pc_plus_4 : in std_logic_vector(31 downto 0);
-       	wb_pc_plus_4 : std_logic_vector(31 downto 0);
+       	wb_pc_plus_4 : OUT STD_logic_vector(31 downto 0);
 
   	-- CONTROL signals
         mem_reg_dest   : in std_logic;
   	    mem_mem_to_reg : in std_logic;
   	    mem_reg_write  : in std_logic;
-  	    wb_reg_dest   : std_logic;
-  	    wb_mem_to_reg : std_logic;
-  	    wb_reg_write  : std_logic;
+  	    wb_reg_dest   : OUT STD_logic;
+  	    wb_mem_to_reg : OUT STD_logic;
+  	    wb_reg_write  : OUT STD_logic;
   	-- END CONTROL signals
 
   	-- ALU signals
 		mem_ALU_out : in std_logic_vector(31 downto 0);
-		wb_ALU_out : std_logic_vector(31 downto 0);
+		wb_ALU_out : OUT STD_logic_vector(31 downto 0);
   	-- END ALU signals
 
   	-- Memory signals
 		mem_dmem_out : in std_logic_vector(31 downto 0);
-		wb_dmem_out : std_logic_vector(31 downto 0);
+		wb_dmem_out : OUT STD_logic_vector(31 downto 0);
   	-- END Memory signals
 
 	-- Register signals
   		mem_write_reg_sel : in std_logic_vector(4 downto 0);
-  		wb_write_reg_sel : std_logic_vector(4 downto 0)
+  		wb_write_reg_sel : OUT STD_logic_vector(4 downto 0)
   	-- END Register signals
   	    );
 END COMPONENT;
 
-SIGNAL	alu_iA :  STD_LOGIC_VECTOR(31 DOWNTO 0);
+--SIGNAL	alu_iA :  STD_LOGIC_VECTOR(31 DOWNTO 0);
 SIGNAL	alu_iB :  STD_LOGIC_VECTOR(31 DOWNTO 0);
 SIGNAL	alu_op :  STD_LOGIC_VECTOR(3 DOWNTO 0);
-SIGNAL	alu_out :  STD_LOGIC_VECTOR(31 DOWNTO 0);
+--SIGNAL	alu_out :  STD_LOGIC_VECTOR(31 DOWNTO 0);
 SIGNAL	alu_shamt :  STD_LOGIC_VECTOR(4 DOWNTO 0);
 SIGNAL	alu_src_sel :  STD_LOGIC;
 SIGNAL	alu_zero :  STD_LOGIC;
 SIGNAL	branch_addr :  STD_LOGIC_VECTOR(31 DOWNTO 0);
 SIGNAL	branch_mux_out :  STD_LOGIC_VECTOR(31 DOWNTO 0);
-SIGNAL	branch_sel :  STD_LOGIC;
+--SIGNAL	branch_sel :  STD_LOGIC;
 SIGNAL	dmem_byteena :  STD_LOGIC_VECTOR(3 DOWNTO 0);
-SIGNAL	dmem_out :  STD_LOGIC_VECTOR(31 DOWNTO 0);
+--SIGNAL	dmem_out :  STD_LOGIC_VECTOR(31 DOWNTO 0);
 SIGNAL	dmem_wren :  STD_LOGIC;
 SIGNAL	imem_byteena :  STD_LOGIC_VECTOR(3 DOWNTO 0);
 SIGNAL	imem_data :  STD_LOGIC_VECTOR(31 DOWNTO 0);
 SIGNAL	imeme_wren :  STD_LOGIC;
-SIGNAL	imm_extended :  STD_LOGIC_VECTOR(31 DOWNTO 0);
+--SIGNAL	imm_extended :  STD_LOGIC_VECTOR(31 DOWNTO 0);
 SIGNAL	imm_shifted :  STD_LOGIC_VECTOR(31 DOWNTO 0);
-SIGNAL	instr :  STD_LOGIC_VECTOR(31 DOWNTO 0);
+--SIGNAL	instr :  STD_LOGIC_VECTOR(31 DOWNTO 0);
 SIGNAL	jump_i_selc :  STD_LOGIC;
 SIGNAL	jumpaddr :  STD_LOGIC_VECTOR(31 DOWNTO 0);
 SIGNAL	mem_to_reg :  STD_LOGIC;
@@ -293,22 +293,23 @@ SIGNAL	next_PC :  STD_LOGIC_VECTOR(31 DOWNTO 0);
 SIGNAL	o_branch :  STD_LOGIC;
 SIGNAL	o_reg_dest_out :  STD_LOGIC;
 SIGNAL	o_shifted :  STD_LOGIC_VECTOR(31 DOWNTO 0);
-SIGNAL	pc4 :  STD_LOGIC_VECTOR(31 DOWNTO 0);
+--SIGNAL	pc4 :  STD_LOGIC_VECTOR(31 DOWNTO 0);
 SIGNAL	pc_out :  STD_LOGIC_VECTOR(31 DOWNTO 0);
 SIGNAL	reg_w_data :  STD_LOGIC_VECTOR(31 DOWNTO 0);
-SIGNAL	reg_w_sel :  STD_LOGIC_VECTOR(4 DOWNTO 0);
+--SIGNAL	reg_w_sel :  STD_LOGIC_VECTOR(4 DOWNTO 0);
 SIGNAL	reg_wrt :  STD_LOGIC;
-SIGNAL	rt_data :  STD_LOGIC_VECTOR(31 DOWNTO 0);
+--SIGNAL	rt_data :  STD_LOGIC_VECTOR(31 DOWNTO 0);
 
 -- IF/ID signals
-SIGNAL	id_flush, id_stall, ifid_reset : std_logic;
+SIGNAL	id_flush, id_stall, id_reset : std_logic;
 SIGNAL 	if_instruction  : std_logic_vector(31 DOWNTO 0);
 SIGNAL 	if_pc_plus_4 : std_logic_vector(31 DOWNTO 0);
 SIGNAL	id_instruction : STD_LOGIC_VECTOR(31 DOWNTO 0);
 SIGNAL	id_pc_plus_4 : STD_LOGIC_VECTOR(31 DOWNTO 0);
 
 -- ID/EX signals
-SIGNAL	ex_flush, ex_stall, idex_reset  : std_logic;
+SIGNAL	ex_flush, ex_stall  : std_logic;
+--  idex_reset
 SIGNAL	ex_instruction  : std_logic_vector(31 DOWNTO 0);
 SIGNAL	ex_pc_plus_4 : std_logic_vector(31 DOWNTO 0);
 SIGNAL	id_reg_dest   : std_logic;
@@ -341,7 +342,8 @@ SIGNAL	ex_write_reg_sel : std_logic_vector(4 downto 0);
 
 -- EX/MEM signals
 SIGNAL	ex_ALU_out: std_logic_vector(31 downto 0);
-SIGNAL	mem_flush, mem_stall, exmem_reset : std_logic;
+SIGNAL	mem_flush, mem_stall : std_logic;
+-- exmem_reset 
 SIGNAL	mem_instruction  : std_logic_vector(31 downto 0);
 SIGNAL	mem_pc_plus_4 : std_logic_vector(31 downto 0);
 
@@ -361,7 +363,8 @@ SIGNAL	mem_rt_data : std_logic_vector(31 downto 0);
 SIGNAL	mem_write_reg_sel : std_logic_vector(4 downto 0);
 
 -- MEM/WB signals
-SIGNAL	wb_flush, wb_stall, memwb_reset : std_logic;
+SIGNAL	wb_flush, wb_stall : std_logic;
+-- memwb_reset
 SIGNAL	wb_instruction  : std_logic_vector(31 downto 0);
 SIGNAL	wb_pc_plus_4 : std_logic_vector(31 downto 0);
 
@@ -404,12 +407,12 @@ PORT MAP(i_sel => ex_ALU_src,
 
 b2v_branch_adder : adder_32
 PORT MAP(i_A => id_pc_plus_4,
-		 i_B => id_extended_immediate,
+		 i_B => imm_shifted,
 		 o_F => branch_addr);
 
 
 b2v_branch_mux : mux21_32bit
-PORT MAP(i_sel => branch_sel,
+PORT MAP(i_sel => ex_branch,
 		 i_0 => id_pc_plus_4,
 		 i_1 => branch_addr,
 		 o_mux => branch_mux_out);
@@ -417,7 +420,7 @@ PORT MAP(i_sel => branch_sel,
 
 b2v_concat : concat
 PORT MAP(i_A => o_shifted(27 DOWNTO 0),
-		 i_B => pc4(31 DOWNTO 28),
+		 i_B => id_pc_plus_4(31 DOWNTO 28),
 		 o_F => jumpaddr);
 
 
@@ -430,13 +433,13 @@ PORT MAP(clock => CLK,
 		 address => mem_ALU_out(11 DOWNTO 2),
 		 byteena => dmem_byteena,
 		 data => mem_rt_data,
-		 q => dmem_out);
+		 q => mem_dmem_out);
 
 
 b2v_eq_and : and_2
 PORT MAP(i_A => o_branch,
 		 i_B => alu_zero,
-		 o_F => branch_sel);
+		 o_F => id_branch);
 
 
 b2v_imem_reg : imem
@@ -448,7 +451,7 @@ PORT MAP(clock => CLK,
 		 address => pc_out(11 DOWNTO 2),
 		 byteena => imem_byteena,
 		 data => imem_data,
-		 q => instr);
+		 q => if_instruction);
 
 
 b2v_imm_addr_shifter : sll_2
@@ -474,13 +477,13 @@ PORT MAP(i_sel => jump_i_selc,
 
 
 b2v_jump_shifter : sll_2
-PORT MAP(i_to_shift => instr,
+PORT MAP(i_to_shift => id_instruction,
 		 o_shifted => o_shifted);
 
 
 b2v_main_control : main_control
-PORT MAP(i_instruction => instr,
-		 o_reg_dest => o_reg_dest_out,
+PORT MAP(i_instruction => id_instruction,
+		 o_reg_dest => id_reg_dest,
 		 o_jump => jump_i_selc,
 		 o_branch => o_branch,
 		 o_mem_to_reg => mem_to_reg,
@@ -504,7 +507,7 @@ PORT MAP(CLK => CLK,
 
 
 b2v_reg_in_mux : mux21_5bit
-PORT MAP(i_sel => o_reg_dest_out,
+PORT MAP(i_sel => ex_reg_dest,
 		 i_0 => id_instruction(20 DOWNTO 16),
 		 i_1 => id_instruction(15 DOWNTO 11),
 		 o_mux => ex_write_reg_sel);
@@ -519,12 +522,12 @@ PORT MAP(i_sel => mem_to_reg,
 
 b2v_register_file : register_file
 PORT MAP(CLK => CLK,
-		 w_en => reg_wrt,
+		 w_en => wb_reg_write,
 		 reset => RESET,
 		 rs_sel => id_instruction(25 DOWNTO 21),
 		 rt_sel => id_instruction(20 DOWNTO 16),
 		 w_data => reg_w_data,
-		 w_sel => reg_w_sel,
+		 w_sel => ex_write_reg_sel,
 		 rs_data => id_rs_data,
 		 rt_data => id_rt_data);
 
@@ -533,7 +536,7 @@ PORT MAP(CLK => CLK,
 		id_flush => id_flush,
 		id_stall => id_stall,
 		ifid_reset => RESET,
-		if_instruction => instr,
+		if_instruction => if_instruction,
 		id_instruction => id_instruction,
 		if_pc_plus_4 => if_pc_plus_4,
 		id_pc_plus_4 => id_pc_plus_4);
@@ -547,8 +550,8 @@ PORT MAP(CLK => CLK,
 		ex_instruction => ex_instruction,	
 		id_pc_plus_4 => id_pc_plus_4,	
 		ex_pc_plus_4 => ex_pc_plus_4,	
-		id_reg_dest	 => o_reg_dest_out,	
-		id_branch => branch_sel,	
+		id_reg_dest	 => id_reg_dest,	
+		id_branch => id_branch,	
 		id_mem_to_reg => mem_to_reg,	
 		id_ALU_op => alu_op ,	
 		id_mem_write => dmem_wren,	
@@ -565,9 +568,9 @@ PORT MAP(CLK => CLK,
 		id_rt_data => id_rt_data,		
 		ex_rs_data => ex_rs_data,		
 		ex_rt_data => ex_rt_data,		
-		id_rs_sel => id_rs_sel,		
-		id_rt_sel => id_rt_sel,		
-		id_rd_sel => id_rd_sel,		
+		id_rs_sel => id_instruction(25 DOWNTO 21),		
+		id_rt_sel => id_instruction(20 DOWNTO 16),		
+		id_rd_sel => id_instruction(15 DOWNTO 11),		
 		ex_rs_sel => ex_rs_sel,		
 		ex_rt_sel => ex_rt_sel,		
 		ex_rd_sel => ex_rd_sel,		
@@ -578,7 +581,7 @@ b2v_ex_mem : ex_mem
 PORT MAP(CLK => CLK,
 		mem_flush => mem_flush, 
 		mem_stall => mem_stall,
-		exmem_reset => exmem_reset,
+		exmem_reset => RESET,
 		ex_instruction  => ex_instruction,
 		mem_instruction  => mem_instruction,
 		ex_pc_plus_4 => ex_pc_plus_4,
@@ -604,7 +607,7 @@ b2v_mem_wb : mem_wb
 PORT MAP(CLK  => CLK,          
 		wb_flush => wb_flush,
 		wb_stall => wb_stall,
-		memwb_reset => memwb_reset,
+		memwb_reset => RESET,
 		mem_instruction => mem_instruction,  -- pass instruction along (useful for debugging)
         wb_instruction  => wb_instruction,
         mem_pc_plus_4  => mem_pc_plus_4,
