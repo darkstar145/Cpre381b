@@ -267,19 +267,30 @@ COMPONENT mem_wb
   	    );
 END COMPONENT;
 
+
+COMPONENT branch
+	PORT (
+		i_id_instruction : IN std_logic_vector(31 DOWNTO 0);
+		i_offset : IN std_logic_vector(31 DOWNTO 0);
+		i_rs_data, i_rt_data : IN std_logic_vector(31 DOWNTO 0);
+		o_branch_addr : IN std_logic_vector(31 DOWNTO 0);
+		o_branch : IN std_logic
+	);
+END COMPONENT;
+
 --SIGNAL	alu_iA :  STD_LOGIC_VECTOR(31 DOWNTO 0);
 SIGNAL	alu_iB :  STD_LOGIC_VECTOR(31 DOWNTO 0);
-SIGNAL	alu_op :  STD_LOGIC_VECTOR(3 DOWNTO 0);
+--SIGNAL	alu_op :  STD_LOGIC_VECTOR(3 DOWNTO 0);
 --SIGNAL	alu_out :  STD_LOGIC_VECTOR(31 DOWNTO 0);
 SIGNAL	alu_shamt :  STD_LOGIC_VECTOR(4 DOWNTO 0);
-SIGNAL	alu_src_sel :  STD_LOGIC;
+--SIGNAL	alu_src_sel :  STD_LOGIC;
 SIGNAL	alu_zero :  STD_LOGIC;
 SIGNAL	branch_addr :  STD_LOGIC_VECTOR(31 DOWNTO 0);
 SIGNAL	branch_mux_out :  STD_LOGIC_VECTOR(31 DOWNTO 0);
 --SIGNAL	branch_sel :  STD_LOGIC;
 SIGNAL	dmem_byteena :  STD_LOGIC_VECTOR(3 DOWNTO 0);
 --SIGNAL	dmem_out :  STD_LOGIC_VECTOR(31 DOWNTO 0);
-SIGNAL	dmem_wren :  STD_LOGIC;
+--SIGNAL	dmem_wren :  STD_LOGIC;
 SIGNAL	imem_byteena :  STD_LOGIC_VECTOR(3 DOWNTO 0);
 SIGNAL	imem_data :  STD_LOGIC_VECTOR(31 DOWNTO 0);
 SIGNAL	imeme_wren :  STD_LOGIC;
@@ -288,20 +299,21 @@ SIGNAL	imm_shifted :  STD_LOGIC_VECTOR(31 DOWNTO 0);
 --SIGNAL	instr :  STD_LOGIC_VECTOR(31 DOWNTO 0);
 SIGNAL	jump_i_selc :  STD_LOGIC;
 SIGNAL	jumpaddr :  STD_LOGIC_VECTOR(31 DOWNTO 0);
-SIGNAL	mem_to_reg :  STD_LOGIC;
+--SIGNAL	mem_to_reg :  STD_LOGIC;
 SIGNAL	next_PC :  STD_LOGIC_VECTOR(31 DOWNTO 0);
 SIGNAL	o_branch :  STD_LOGIC;
-SIGNAL	o_reg_dest_out :  STD_LOGIC;
+--SIGNAL	o_reg_dest_out :  STD_LOGIC;
 SIGNAL	o_shifted :  STD_LOGIC_VECTOR(31 DOWNTO 0);
 --SIGNAL	pc4 :  STD_LOGIC_VECTOR(31 DOWNTO 0);
 SIGNAL	pc_out :  STD_LOGIC_VECTOR(31 DOWNTO 0);
 SIGNAL	reg_w_data :  STD_LOGIC_VECTOR(31 DOWNTO 0);
 --SIGNAL	reg_w_sel :  STD_LOGIC_VECTOR(4 DOWNTO 0);
-SIGNAL	reg_wrt :  STD_LOGIC;
+--SIGNAL	reg_wrt :  STD_LOGIC;
 --SIGNAL	rt_data :  STD_LOGIC_VECTOR(31 DOWNTO 0);
 
 -- IF/ID signals
-SIGNAL	id_flush, id_stall, id_reset : std_logic;
+SIGNAL	id_flush, id_stall : std_logic;
+--id_reset
 SIGNAL 	if_instruction  : std_logic_vector(31 DOWNTO 0);
 SIGNAL 	if_pc_plus_4 : std_logic_vector(31 DOWNTO 0);
 SIGNAL	id_instruction : STD_LOGIC_VECTOR(31 DOWNTO 0);
@@ -314,11 +326,14 @@ SIGNAL	ex_instruction  : std_logic_vector(31 DOWNTO 0);
 SIGNAL	ex_pc_plus_4 : std_logic_vector(31 DOWNTO 0);
 SIGNAL	id_reg_dest   : std_logic;
 SIGNAL	id_branch    : std_logic;
+
 SIGNAL	id_mem_to_reg : std_logic;
 SIGNAL	id_ALU_op    : std_logic_vector(3 downto 0);
 SIGNAL	id_mem_write  : std_logic;
 SIGNAL	id_ALU_src   : std_logic;
 SIGNAL	id_reg_write  : std_logic;
+--SIGNAL	id_dmem_wren :  STD_LOGIC;
+--SIGNAL	id_alu_src_sel :  STD_LOGIC;
 SIGNAL	ex_reg_dest   : std_logic;
 SIGNAL	ex_branch    : std_logic;
 SIGNAL	ex_mem_to_reg : std_logic;
@@ -330,9 +345,9 @@ SIGNAL	id_rs_data : std_logic_vector(31 downto 0);
 SIGNAL	id_rt_data : std_logic_vector(31 downto 0);
 SIGNAL	ex_rs_data : std_logic_vector(31 downto 0);
 SIGNAL	ex_rt_data : std_logic_vector(31 downto 0);
-SIGNAL	id_rs_sel : std_logic_vector(4 downto 0);
-SIGNAL	id_rt_sel : std_logic_vector(4 downto 0);
-SIGNAL	id_rd_sel : std_logic_vector(4 downto 0);
+--SIGNAL	id_rs_sel : std_logic_vector(4 downto 0);
+--SIGNAL	id_rt_sel : std_logic_vector(4 downto 0);
+--SIGNAL	id_rd_sel : std_logic_vector(4 downto 0);
 SIGNAL	ex_rs_sel : std_logic_vector(4 downto 0);
 SIGNAL	ex_rt_sel : std_logic_vector(4 downto 0);
 SIGNAL	ex_rd_sel : std_logic_vector(4 downto 0);
@@ -413,7 +428,7 @@ PORT MAP(i_A => id_pc_plus_4,
 
 b2v_branch_mux : mux21_32bit
 PORT MAP(i_sel => ex_branch,
-		 i_0 => id_pc_plus_4,
+		 i_0 => if_pc_plus_4,
 		 i_1 => branch_addr,
 		 o_mux => branch_mux_out);
 
@@ -463,12 +478,6 @@ b2v_imm_sign_extender : sign_extender_16_32
 PORT MAP(i_to_extend => id_instruction(15 DOWNTO 0),
 		 o_extended => id_extended_immediate);
 
-
-
-
-
-
-
 b2v_jump_mux : mux21_32bit
 PORT MAP(i_sel => jump_i_selc,
 		 i_0 => branch_mux_out,
@@ -486,11 +495,11 @@ PORT MAP(i_instruction => id_instruction,
 		 o_reg_dest => id_reg_dest,
 		 o_jump => jump_i_selc,
 		 o_branch => o_branch,
-		 o_mem_to_reg => mem_to_reg,
-		 o_mem_write => dmem_wren,
-		 o_ALU_src => alu_src_sel,
-		 o_reg_write => reg_wrt,
-		 o_ALU_op => alu_op);
+		 o_mem_to_reg => id_mem_to_reg,
+		 o_mem_write => id_mem_write,
+		 o_ALU_src => id_ALU_src,
+		 o_reg_write => id_reg_write,
+		 o_ALU_op => id_alu_op);
 
 
 b2v_pc_adder : adder_32
@@ -508,13 +517,13 @@ PORT MAP(CLK => CLK,
 
 b2v_reg_in_mux : mux21_5bit
 PORT MAP(i_sel => ex_reg_dest,
-		 i_0 => id_instruction(20 DOWNTO 16),
-		 i_1 => id_instruction(15 DOWNTO 11),
-		 o_mux => ex_write_reg_sel);
+		 i_0 => ex_instruction(20 DOWNTO 16),
+		 i_1 => ex_instruction(15 DOWNTO 11),
+		 o_mux => ex_write_reg_sel); -- changed
 
 
 b2v_reg_w_data_mux : mux21_32bit
-PORT MAP(i_sel => mem_to_reg,
+PORT MAP(i_sel => wb_mem_to_reg,
 		 i_0 => wb_ALU_out,
 		 i_1 => wb_dmem_out,
 		 o_mux => reg_w_data);
@@ -524,10 +533,10 @@ b2v_register_file : register_file
 PORT MAP(CLK => CLK,
 		 w_en => wb_reg_write,
 		 reset => RESET,
-		 rs_sel => id_instruction(25 DOWNTO 21),
-		 rt_sel => id_instruction(20 DOWNTO 16),
+		 rs_sel => wb_instruction(25 DOWNTO 21),
+		 rt_sel => wb_instruction(20 DOWNTO 16),
 		 w_data => reg_w_data,
-		 w_sel => ex_write_reg_sel,
+		 w_sel => wb_write_reg_sel,
 		 rs_data => id_rs_data,
 		 rt_data => id_rt_data);
 
@@ -552,11 +561,11 @@ PORT MAP(CLK => CLK,
 		ex_pc_plus_4 => ex_pc_plus_4,	
 		id_reg_dest	 => id_reg_dest,	
 		id_branch => id_branch,	
-		id_mem_to_reg => mem_to_reg,	
-		id_ALU_op => alu_op ,	
-		id_mem_write => dmem_wren,	
-		id_ALU_src => alu_src_sel,	
-		id_reg_write => reg_wrt,	
+		id_mem_to_reg => id_mem_to_reg,	
+		id_ALU_op => id_alu_op ,	
+		id_mem_write => id_mem_write,	
+		id_ALU_src => id_ALU_src,	
+		id_reg_write => id_reg_write,	
 		ex_reg_dest => ex_reg_dest,	
 		ex_branch => ex_branch,	
 		ex_mem_to_reg => ex_mem_to_reg,	
@@ -616,7 +625,7 @@ PORT MAP(CLK  => CLK,
   	-- CONTROL signals
         mem_reg_dest  => mem_reg_dest, 
   	    mem_mem_to_reg => mem_mem_to_reg, 
-  	    mem_reg_write  => mem_mem_write,
+  	    mem_reg_write  => mem_reg_write,
   	    wb_reg_dest   => wb_reg_dest,
   	    wb_mem_to_reg => wb_mem_to_reg,
   	    wb_reg_write  => wb_reg_write,

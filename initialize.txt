@@ -8,13 +8,15 @@ force -freeze sim:/mipssimulator/REG_RESET 0 0
 
 force -freeze sim:/mipssimulator/CLK 1 0, 0 {50 ns} -r 100
 force -freeze sim:/mipssimulator/RESET 1 0
-force -freeze sim:/mipssimulator/id_flush 1 0
-force -freeze sim:/mipssimulator/ex_flush 1 0
-force -freeze sim:/mipssimulator/mem_flush 1 0
-force -freeze sim:/mipssimulator/wb_flush 1 0
-run 100
-force -freeze sim:/mipssimulator/RESET 0 0
+force -freeze sim:/mipssimulator/id_stall 0 0
+force -freeze sim:/mipssimulator/ex_stall 0 0
+force -freeze sim:/mipssimulator/mem_stall 0 0
+force -freeze sim:/mipssimulator/wb_stall 0 0
 force -freeze sim:/mipssimulator/id_flush 0 0
 force -freeze sim:/mipssimulator/ex_flush 0 0
 force -freeze sim:/mipssimulator/mem_flush 0 0
 force -freeze sim:/mipssimulator/wb_flush 0 0
+
+run 100
+force -freeze sim:/mipssimulator/RESET 0 0
+run 100
