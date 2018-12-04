@@ -271,10 +271,11 @@ END COMPONENT;
 COMPONENT branch
 	PORT (
 		i_id_instruction : IN std_logic_vector(31 DOWNTO 0);
-		i_offset : IN std_logic_vector(31 DOWNTO 0);
+		i_id_pc_plus_4 : IN std_logic_vector(31 DOWNTO 0);
+		--i_offset : IN std_logic_vector(31 DOWNTO 0);
 		i_rs_data, i_rt_data : IN std_logic_vector(31 DOWNTO 0);
-		o_branch_addr : IN std_logic_vector(31 DOWNTO 0);
-		o_branch : IN std_logic
+		o_branch_addr : OUT std_logic_vector(31 DOWNTO 0);
+		o_branch : OUT std_logic
 	);
 END COMPONENT;
 
@@ -295,7 +296,7 @@ SIGNAL	imem_byteena :  STD_LOGIC_VECTOR(3 DOWNTO 0);
 SIGNAL	imem_data :  STD_LOGIC_VECTOR(31 DOWNTO 0);
 SIGNAL	imeme_wren :  STD_LOGIC;
 --SIGNAL	imm_extended :  STD_LOGIC_VECTOR(31 DOWNTO 0);
-SIGNAL	imm_shifted :  STD_LOGIC_VECTOR(31 DOWNTO 0);
+SIGNAL	id_imm_shifted :  STD_LOGIC_VECTOR(31 DOWNTO 0);
 --SIGNAL	instr :  STD_LOGIC_VECTOR(31 DOWNTO 0);
 SIGNAL	jump_i_selc :  STD_LOGIC;
 SIGNAL	jumpaddr :  STD_LOGIC_VECTOR(31 DOWNTO 0);
@@ -420,14 +421,25 @@ PORT MAP(i_sel => ex_ALU_src,
 		 o_mux => alu_iB);
 
 
-b2v_branch_adder : adder_32
-PORT MAP(i_A => id_pc_plus_4,
-		 i_B => imm_shifted,
-		 o_F => branch_addr);
+-- add branch resolution in id stage
+b2v_id_branch : branch
+	PORT MAP(
+		i_id_instruction => id_instruction,
+		i_id_pc_plus_4 => id_pc_plus_4,
+		i_rs_data => id_rs_data,
+		i_rt_data => id_rt_data,
+		o_branch_addr => branch_addr,
+		o_branch => id_branch);
+	
+	
+-- b2v_branch_adder : adder_32
+-- PORT MAP(i_A => id_pc_plus_4,
+		 -- i_B => id_imm_shifted,
+		 -- o_F => branch_addr);
 
 
 b2v_branch_mux : mux21_32bit
-PORT MAP(i_sel => ex_branch,
+PORT MAP(i_sel => id_branch,
 		 i_0 => if_pc_plus_4,
 		 i_1 => branch_addr,
 		 o_mux => branch_mux_out);
@@ -471,7 +483,7 @@ PORT MAP(clock => CLK,
 
 b2v_imm_addr_shifter : sll_2
 PORT MAP(i_to_shift => id_instruction,
-		 o_shifted => imm_shifted);
+		 o_shifted => id_imm_shifted);
 
 
 b2v_imm_sign_extender : sign_extender_16_32
@@ -504,7 +516,7 @@ PORT MAP(i_instruction => id_instruction,
 
 b2v_pc_adder : adder_32
 PORT MAP(i_A => pc_out,
-		 i_B => ((31 downto 3 => '0') & "100"),
+		 i_B => x"00000004",
 		 o_F => if_pc_plus_4);
 
 
@@ -533,8 +545,8 @@ b2v_register_file : register_file
 PORT MAP(CLK => CLK,
 		 w_en => wb_reg_write,
 		 reset => RESET,
-		 rs_sel => wb_instruction(25 DOWNTO 21),
-		 rt_sel => wb_instruction(20 DOWNTO 16),
+		 rs_sel => id_instruction(25 DOWNTO 21),
+		 rt_sel => id_instruction(20 DOWNTO 16),
 		 w_data => reg_w_data, --trACK
 		 w_sel => wb_write_reg_sel,
 		 rs_data => id_rs_data,
@@ -542,7 +554,7 @@ PORT MAP(CLK => CLK,
 
 b2v_if_id : if_id
 PORT MAP(CLK => CLK,
-		id_flush => id_flush,
+		id_flush => id_branch,
 		id_stall => id_stall,
 		ifid_reset => RESET,
 		if_instruction => if_instruction,
