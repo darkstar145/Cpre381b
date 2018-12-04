@@ -33,7 +33,7 @@ begin
 
 	if(reset = '1') then
 		registers <= (others => (others => '0'));
-	elsif (rising_edge(CLK)) then
+	elsif (falling_edge(CLK)) then -- change to falling edge
 		if (w_en = '1' and w_sel /= "00000") then
 			registers(v_w_sel) <= w_data; 
 		end if;
