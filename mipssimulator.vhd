@@ -280,6 +280,16 @@ COMPONENT branch
 	);
 END COMPONENT;
 
+
+COMPONENT forwarding_unit
+	PORT (
+		EX_MEM_RegisterRd, ID_EX_RegisterRs, ID_EX_RegisterRt, MEM_WB_RegisterRd, IF_ID_RegisterRs, IF_ID_RegisterRt, EX_MEM_WRITE_REG_SEL, ID_EX_RegisterRd : IN std_logic_vector(4 DOWNTO 0);
+		EX_MEM_RegWrite, MEM_WB_RegWrite, EX_MEM_MEM_TO_REG, ID_EX_RegWrite, ID_RegWrite : IN std_logic;
+		ForwardA, ForwardB : OUT std_logic_vector(1 DOWNTO 0);
+		ForwardC, ForwardD : OUT std_logic
+	);
+END COMPONENT;
+
 --SIGNAL	alu_iA :  STD_LOGIC_VECTOR(31 DOWNTO 0);
 SIGNAL	alu_iB :  STD_LOGIC_VECTOR(31 DOWNTO 0);
 --SIGNAL	alu_op :  STD_LOGIC_VECTOR(3 DOWNTO 0);
@@ -404,6 +414,10 @@ SIGNAL	wb_dmem_out: std_logic_vector(31 downto 0);
 -- Register signals
 SIGNAL	wb_write_reg_sel : std_logic_vector(4 downto 0);
 -- END Register signals
+
+-- Forwarding signals
+SIGNAL ForwardA, ForwardB : std_logic_vector(1 DOWNTO 0);
+SIGNAL ForwardC, ForwardD : std_logic;
 
 BEGIN 
 
@@ -661,6 +675,27 @@ PORT MAP(CLK  => CLK,
   		wb_write_reg_sel => wb_write_reg_sel
   	-- END Register signals
   	    );
+
+b2v_forwarding_unit : forwarding_unit
+PORT MAP(
+	EX_MEM_RegisterRd => mem_instruction(15 DOWNTO 11), 
+	ID_EX_RegisterRs => ex_rs_sel, 
+	ID_EX_RegisterRt => ex_rt_sel, 
+	MEM_WB_RegisterRd => wb_instruction(15 DOWNTO 11), 
+	IF_ID_RegisterRs => id_instruction(25 DOWNTO 21), 
+	IF_ID_RegisterRt => id_instruction(20 DOWNTO 16), 
+	EX_MEM_WRITE_REG_SEL => mem_write_reg_sel, 
+	ID_EX_RegisterRd => ex_instruction(15 DOWNTO 11), 
+	EX_MEM_RegWrite => mem_reg_write, 
+	MEM_WB_RegWrite => wb_reg_write, 
+	EX_MEM_MEM_TO_REG => mem_mem_to_reg, 
+	ID_EX_RegWrite => ex_reg_write, 
+	ID_RegWrite => id_reg_write, 
+	ForwardA => ForwardA, 
+	ForwardB => ForwardB, 
+	ForwardC => ForwardC, 
+	ForwardD => ForwardD
+);
 		
 alu_shamt <= "00000";
 dmem_byteena <= "1111";
