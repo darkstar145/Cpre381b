@@ -272,6 +272,7 @@ COMPONENT branch
 	PORT (
 		i_id_instruction : IN std_logic_vector(31 DOWNTO 0);
 		i_id_pc_plus_4 : IN std_logic_vector(31 DOWNTO 0);
+		i_branch : IN std_logic;
 		--i_offset : IN std_logic_vector(31 DOWNTO 0);
 		i_rs_data, i_rt_data : IN std_logic_vector(31 DOWNTO 0);
 		o_branch_addr : OUT std_logic_vector(31 DOWNTO 0);
@@ -313,7 +314,8 @@ SIGNAL	reg_w_data :  STD_LOGIC_VECTOR(31 DOWNTO 0);
 --SIGNAL	rt_data :  STD_LOGIC_VECTOR(31 DOWNTO 0);
 
 -- IF/ID signals
-SIGNAL	id_flush, id_stall : std_logic;
+SIGNAL	id_stall : std_logic;
+--id_flush
 --id_reset
 SIGNAL 	if_instruction  : std_logic_vector(31 DOWNTO 0);
 SIGNAL 	if_pc_plus_4 : std_logic_vector(31 DOWNTO 0);
@@ -426,6 +428,7 @@ b2v_id_branch : branch
 	PORT MAP(
 		i_id_instruction => id_instruction,
 		i_id_pc_plus_4 => id_pc_plus_4,
+		i_branch => o_branch,
 		i_rs_data => id_rs_data,
 		i_rt_data => id_rt_data,
 		o_branch_addr => branch_addr,
@@ -463,10 +466,10 @@ PORT MAP(clock => CLK,
 		 q => mem_dmem_out);
 
 
-b2v_eq_and : and_2
-PORT MAP(i_A => o_branch,
-		 i_B => alu_zero,
-		 o_F => id_branch);
+--b2v_eq_and : and_2
+--PORT MAP(i_A => o_branch,
+--	 i_B => alu_zero,
+--	 o_F => id_branch);
 
 
 b2v_imem_reg : imem
