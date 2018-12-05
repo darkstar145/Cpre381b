@@ -51,6 +51,14 @@ COMPONENT mux21_32bit
 	);
 END COMPONENT;
 
+COMPONENT mux31_32bit
+	PORT(i_sel : IN STD_LOGIC_VECTOR(1 DOWNTO 0);
+		 i_0 : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
+		 i_1, i_2 : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
+		 o_mux : OUT STD_LOGIC_VECTOR(31 DOWNTO 0)
+	);
+END COMPONENT;
+
 COMPONENT adder_32
 	PORT(i_A : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
 		 i_B : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
@@ -126,6 +134,7 @@ END COMPONENT;
 COMPONENT pc_reg
 	PORT(CLK : IN STD_LOGIC;
 		 reset : IN STD_LOGIC;
+		stall : IN STD_LOGIC;
 		 i_next_PC : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
 		 o_PC : OUT STD_LOGIC_VECTOR(31 DOWNTO 0)
 	);
@@ -283,14 +292,22 @@ END COMPONENT;
 
 COMPONENT forwarding_unit
 	PORT (
-		EX_MEM_RegisterRd, ID_EX_RegisterRs, ID_EX_RegisterRt, MEM_WB_RegisterRd, IF_ID_RegisterRs, IF_ID_RegisterRt, EX_MEM_WRITE_REG_SEL, ID_EX_RegisterRd : IN std_logic_vector(4 DOWNTO 0);
+		EX_MEM_RegisterRd, ID_EX_RegisterRs, ID_EX_RegisterRt, MEM_WB_RegisterRd, IF_ID_RegisterRs, IF_ID_RegisterRt, ID_EX_RegisterRd : IN std_logic_vector(4 DOWNTO 0);
+--EX_MEM_WRITE_REG_SEL
 		EX_MEM_RegWrite, MEM_WB_RegWrite, EX_MEM_MEM_TO_REG, ID_EX_RegWrite, ID_RegWrite : IN std_logic;
 		ForwardA, ForwardB : OUT std_logic_vector(1 DOWNTO 0);
 		ForwardC, ForwardD : OUT std_logic
 	);
 END COMPONENT;
 
---SIGNAL	alu_iA :  STD_LOGIC_VECTOR(31 DOWNTO 0);
+COMPONENT hazard_detection_unit
+	PORT (
+		ID_EX_RegisterRt, IF_ID_RegisterRs, IF_ID_RegisterRt, EX_Write_Reg_Sel : IN std_logic_vector(4 DOWNTO 0);
+		ID_Jump, IF_ID_Branch, ID_EX_MemRead, branch_condition_combined : IN std_logic;
+		stall, IF_ID_flush, ID_EX_flush : OUT std_logic);
+END COMPONENT;
+
+SIGNAL	alu_iA :  STD_LOGIC_VECTOR(31 DOWNTO 0);
 SIGNAL	alu_iB :  STD_LOGIC_VECTOR(31 DOWNTO 0);
 --SIGNAL	alu_op :  STD_LOGIC_VECTOR(3 DOWNTO 0);
 --SIGNAL	alu_out :  STD_LOGIC_VECTOR(31 DOWNTO 0);
@@ -324,8 +341,7 @@ SIGNAL	reg_w_data :  STD_LOGIC_VECTOR(31 DOWNTO 0);
 --SIGNAL	rt_data :  STD_LOGIC_VECTOR(31 DOWNTO 0);
 
 -- IF/ID signals
-SIGNAL	id_stall : std_logic;
---id_flush
+SIGNAL	id_stall, id_flush : std_logic;
 --id_reset
 SIGNAL 	if_instruction  : std_logic_vector(31 DOWNTO 0);
 SIGNAL 	if_pc_plus_4 : std_logic_vector(31 DOWNTO 0);
@@ -418,12 +434,18 @@ SIGNAL	wb_write_reg_sel : std_logic_vector(4 downto 0);
 -- Forwarding signals
 SIGNAL ForwardA, ForwardB : std_logic_vector(1 DOWNTO 0);
 SIGNAL ForwardC, ForwardD : std_logic;
+SIGNAL ForwardC_out, ForwardD_out : std_logic_vector(31 downto 0);
+
+SIGNAL ex_rt_data_out : std_logic_vector(31 downto 0);
+
+-- Hazard detection signals
+SIGNAL stall : std_logic;
 
 BEGIN 
 
 b2v_ALU : alu
 PORT MAP(ALU_OP => ex_ALU_op,
-		 i_A => ex_rs_data,
+		 i_A => alu_iA,
 		 i_B => alu_iB,
 		 shamt => alu_shamt,
 		 zero => alu_zero,
@@ -432,7 +454,7 @@ PORT MAP(ALU_OP => ex_ALU_op,
 
 b2v_alu_in_mux : mux21_32bit
 PORT MAP(i_sel => ex_ALU_src,
-		 i_0 => ex_rt_data,
+		 i_0 => ex_rt_data_out,
 		 i_1 => ex_extended_immediate,
 		 o_mux => alu_iB);
 
@@ -443,8 +465,8 @@ b2v_id_branch : branch
 		i_id_instruction => id_instruction,
 		i_id_pc_plus_4 => id_pc_plus_4,
 		i_branch => o_branch,
-		i_rs_data => id_rs_data,
-		i_rt_data => id_rt_data,
+		i_rs_data => ForwardC_out,
+		i_rt_data => ForwardD_out,
 		o_branch_addr => branch_addr,
 		o_branch => id_branch);
 	
@@ -540,6 +562,7 @@ PORT MAP(i_A => pc_out,
 b2v_PC_reg : pc_reg
 PORT MAP(CLK => CLK,
 		 reset => RESET,
+		stall => stall,
 		 i_next_PC => next_PC,
 		 o_PC => pc_out);
 
@@ -571,8 +594,8 @@ PORT MAP(CLK => CLK,
 
 b2v_if_id : if_id
 PORT MAP(CLK => CLK,
-		id_flush => id_branch,
-		id_stall => id_stall,
+		id_flush => id_flush,
+		id_stall => stall,
 		ifid_reset => RESET,
 		if_instruction => if_instruction,
 		id_instruction => id_instruction,
@@ -582,7 +605,7 @@ PORT MAP(CLK => CLK,
 b2v_id_ex : id_ex
 PORT MAP(CLK => CLK,
 		ex_flush => ex_flush,
-		ex_stall => ex_stall,	
+		ex_stall => '0',	
 		idex_reset => RESET,	
 		id_instruction => id_instruction,	
 		ex_instruction => ex_instruction,	
@@ -602,8 +625,8 @@ PORT MAP(CLK => CLK,
 		ex_mem_write => ex_mem_write,	
 		ex_ALU_src => ex_ALU_src,	
 		ex_reg_write => ex_reg_write,	
-		id_rs_data => id_rs_data,		
-		id_rt_data => id_rt_data,		
+		id_rs_data => ForwardC_out,		
+		id_rt_data => ForwardD_out,		
 		ex_rs_data => ex_rs_data,		
 		ex_rt_data => ex_rt_data,		
 		id_rs_sel => id_instruction(25 DOWNTO 21),		
@@ -617,8 +640,8 @@ PORT MAP(CLK => CLK,
 
 b2v_ex_mem : ex_mem
 PORT MAP(CLK => CLK,
-		mem_flush => mem_flush, 
-		mem_stall => mem_stall,
+		mem_flush => '0', 
+		mem_stall => '0',
 		exmem_reset => RESET,
 		ex_instruction  => ex_instruction,
 		mem_instruction  => mem_instruction,
@@ -634,7 +657,7 @@ PORT MAP(CLK => CLK,
 		mem_reg_write  => mem_reg_write,
 		ex_ALU_out => ex_ALU_out,
 		mem_ALU_out => mem_ALU_out,
-		ex_rt_data => ex_rt_data,
+		ex_rt_data => ex_rt_data_out,
 		mem_rt_data => mem_rt_data,
 		ex_write_reg_sel =>  ex_write_reg_sel,
 		mem_write_reg_sel => mem_write_reg_sel);
@@ -643,8 +666,8 @@ PORT MAP(CLK => CLK,
 
 b2v_mem_wb : mem_wb
 PORT MAP(CLK  => CLK,          
-		wb_flush => wb_flush,
-		wb_stall => wb_stall,
+		wb_flush => '0',
+		wb_stall => '0',
 		memwb_reset => RESET,
 		mem_instruction => mem_instruction,  -- pass instruction along (useful for debugging)
         wb_instruction  => wb_instruction,
@@ -678,25 +701,74 @@ PORT MAP(CLK  => CLK,
 
 b2v_forwarding_unit : forwarding_unit
 PORT MAP(
-	EX_MEM_RegisterRd => mem_instruction(15 DOWNTO 11), 
+	EX_MEM_RegisterRd => mem_write_reg_sel, 
+	EX_MEM_RegWrite => mem_reg_write, 
+	EX_MEM_MEM_TO_REG => mem_mem_to_reg, 
 	ID_EX_RegisterRs => ex_rs_sel, 
-	ID_EX_RegisterRt => ex_rt_sel, 
-	MEM_WB_RegisterRd => wb_instruction(15 DOWNTO 11), 
+	ID_EX_RegisterRt => ex_rt_sel,
+	ID_EX_RegisterRd => ex_rd_sel, 	
+	ID_EX_RegWrite => ex_reg_write,
 	IF_ID_RegisterRs => id_instruction(25 DOWNTO 21), 
 	IF_ID_RegisterRt => id_instruction(20 DOWNTO 16), 
-	EX_MEM_WRITE_REG_SEL => mem_write_reg_sel, 
-	ID_EX_RegisterRd => ex_instruction(15 DOWNTO 11), 
-	EX_MEM_RegWrite => mem_reg_write, 
+	--EX_MEM_WRITE_REG_SEL => mem_write_reg_sel, 
+	MEM_WB_RegisterRd => wb_instruction(15 DOWNTO 11), 
 	MEM_WB_RegWrite => wb_reg_write, 
-	EX_MEM_MEM_TO_REG => mem_mem_to_reg, 
-	ID_EX_RegWrite => ex_reg_write, 
 	ID_RegWrite => id_reg_write, 
 	ForwardA => ForwardA, 
 	ForwardB => ForwardB, 
 	ForwardC => ForwardC, 
 	ForwardD => ForwardD
 );
-		
+
+b2v_forwarding_a_mux : mux31_32bit
+PORT MAP(
+	i_sel => ForwardA,
+	i_0 => ex_rs_data,
+	i_1 => reg_w_data,
+	i_2 => mem_ALU_out,
+	o_mux => alu_iA
+	);
+
+b2v_forwarding_b_mux : mux31_32bit
+PORT MAP(
+	i_sel => ForwardB,
+	i_0 => ex_rt_data,
+	i_1 => reg_w_data,
+	i_2 => mem_ALU_out,
+	o_mux => ex_rt_data_out
+	);
+
+b2v_forwarding_c_mux : mux21_32bit
+PORT MAP(
+	i_sel => ForwardC,
+	i_0 => id_rs_data,
+	i_1 => mem_ALU_out,
+	o_mux => ForwardC_out
+	);
+	
+b2v_forwarding_d_mux : mux21_32bit
+PORT MAP(
+	i_sel => ForwardD,
+	i_0 => id_rt_data,
+	i_1 => mem_ALU_out,
+	o_mux => ForwardD_out
+	);
+
+b2v_hazard_unit : hazard_detection_unit
+PORT MAP(
+	ID_EX_RegisterRt => ex_rt_sel,
+	IF_ID_RegisterRs => id_instruction(25 DOWNTO 21),
+	IF_ID_RegisterRt => id_instruction(20 DOWNTO 16),
+	EX_Write_Reg_Sel => ex_write_reg_sel,
+	ID_Jump => jump_i_selc,
+	IF_ID_Branch => o_branch,
+	ID_EX_MemRead => ex_mem_to_reg,
+	branch_condition_combined => id_branch,
+	stall => stall,
+	IF_ID_flush => id_flush,
+	ID_EX_flush => ex_flush
+);
+
 alu_shamt <= "00000";
 dmem_byteena <= "1111";
 imem_byteena <= "1111";
